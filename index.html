@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Finance Flow | Premium Personal Finance Tracker</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <i class="fas fa-coins logo-icon"></i>
+                <span class="logo-text">Finance Flow</span>
+            </div>
+            <nav class="sidebar-nav">
+                <ul>
+                    <li class="active" data-page="dashboard"><i class="fas fa-th-large"></i> Dashboard</li>
+                    <li data-page="transactions"><i class="fas fa-exchange-alt"></i> Transactions</li>
+                    <li data-page="budgets"><i class="fas fa-piggy-bank"></i> Budgets</li>
+                    <li data-page="tax-invest"><i class="fas fa-chart-line"></i> Tax & Investments</li>
+                </ul>
+            </nav>
+            <div class="sidebar-footer">
+                <button id="export-data" class="btn-outline"><i class="fas fa-download"></i> Export CSV</button>
+                <div class="import-wrapper">
+                    <label for="import-data" class="btn-outline"><i class="fas fa-upload"></i> Import JSON</label>
+                    <input type="file" id="import-data" accept=".json" hidden>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Top Header -->
+            <header class="top-header">
+                <div class="header-left">
+                    <button id="mobile-toggle" class="mobile-toggle"><i class="fas fa-bars"></i></button>
+                    <h2 id="page-title">Dashboard</h2>
+                </div>
+                <div class="header-right">
+                    <div class="month-filter">
+                        <select id="filter-month-year">
+                            <!-- Populated via JS -->
+                        </select>
+                    </div>
+                    <div class="total-balance-header">
+                        <span class="label">Total Balance:</span>
+                        <span id="header-total-balance" class="value balance-positive">$0.00</span>
+                    </div>
+                    <button class="btn-primary" id="open-add-modal"><i class="fas fa-plus"></i> New Entry</button>
+                </div>
+            </header>
+
+            <!-- Dashboard Page -->
+            <div id="dashboard-page" class="page">
+                <div class="summary-cards">
+                    <div class="card income-card">
+                        <div class="card-icon"><i class="fas fa-arrow-down"></i></div>
+                        <div class="card-data">
+                            <span class="card-label">Income</span>
+                            <span id="monthly-income" class="card-value">$0.00</span>
+                        </div>
+                    </div>
+                    <div class="card expense-card">
+                        <div class="card-icon"><i class="fas fa-arrow-up"></i></div>
+                        <div class="card-data">
+                            <span class="card-label">Expenses</span>
+                            <span id="monthly-expense" class="card-value">$0.00</span>
+                        </div>
+                    </div>
+                    <div class="card balance-card">
+                        <div class="card-icon"><i class="fas fa-wallet"></i></div>
+                        <div class="card-data">
+                            <span class="card-label">Balance</span>
+                            <span id="monthly-savings" class="card-value">$0.00</span>
+                        </div>
+                    </div>
+                    <div class="card networth-card">
+                        <div class="card-icon"><i class="fas fa-gem"></i></div>
+                        <div class="card-data">
+                            <span class="card-label">Net Worth</span>
+                            <span id="total-net-worth" class="card-value">$0.00</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="charts-section">
+                    <div class="chart-container main-chart">
+                        <h3>Income vs Expenses (Yearly)</h3>
+                        <canvas id="trend-chart"></canvas>
+                    </div>
+                    <div class="chart-container pie-chart">
+                        <h3>Spending by Category</h3>
+                        <canvas id="category-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Transactions Page -->
+            <div id="transactions-page" class="page hidden">
+                <div class="transactions-header">
+                    <div class="search-box">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="transaction-search" placeholder="Search by notes or category...">
+                    </div>
+                </div>
+                <div class="table-container">
+                    <table id="transactions-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Category</th>
+                                <th>Type</th>
+                                <th>Amount</th>
+                                <th>Notes</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="transactions-body">
+                            <!-- Populated via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Budgets Page -->
+            <div id="budgets-page" class="page hidden">
+                <div class="budgets-grid" id="budgets-container">
+                    <!-- Populated via JS -->
+                </div>
+                <button class="btn-secondary" id="open-budget-modal">Manage Budget Goals</button>
+            </div>
+
+            <!-- Tax & Investments Page -->
+            <div id="tax-invest-page" class="page hidden">
+                <div class="tabs">
+                    <button class="tab-btn active" data-tab="tax-calc">Tax Calculator</button>
+                    <button class="tab-btn" data-tab="invest-manager">Investment Manager</button>
+                </div>
+
+                <div id="tax-calc" class="tab-content">
+                    <div class="tax-layout">
+                        <div class="tax-inputs card">
+                            <h3>Tax Settings</h3>
+                            <div class="form-group checkbox-group">
+                                <label><input type="checkbox" id="tax-use-ff-income"> Use income from Finance Flow</label>
+                            </div>
+                            <div class="form-group">
+                                <label>Annual Income</label>
+                                <input type="number" id="tax-annual-income" placeholder="Enter annual income">
+                            </div>
+                            <div class="form-group">
+                                <label>Deductions (80C, etc.)</label>
+                                <input type="number" id="tax-deductions" value="0">
+                            </div>
+                            <button class="btn-primary" id="calculate-tax-btn">Calculate Tax</button>
+                        </div>
+                        <div class="tax-results card">
+                            <h3>Results</h3>
+                            <div class="tax-result-grid">
+                                <div>Taxable Income: <strong id="taxable-income-val">$0</strong></div>
+                                <div>Estimated Tax: <strong id="tax-payable-val">$0</strong></div>
+                                <div>Effective Rate: <strong id="tax-rate-val">0%</strong></div>
+                                <div>Monthly Reserve: <strong id="tax-monthly-val">$0</strong></div>
+                            </div>
+                            <div id="tax-slab-breakdown" class="slab-list">
+                                <!-- Breakdown goes here -->
+                            </div>
+                            <p class="disclaimer"><em>* This is an approximate calculator; not official tax advice.</em></p>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="invest-manager" class="tab-content hidden">
+                    <div class="investments-header">
+                        <div class="summary-cards">
+                           <div class="card">
+                               <div>Total Invested: <h4 id="total-invested-val">$0</h4></div>
+                           </div>
+                           <div class="card">
+                               <div>Estimated Value: <h4 id="est-current-val">$0</h4></div>
+                           </div>
+                        </div>
+                        <button class="btn-primary" id="open-invest-modal"><i class="fas fa-plus"></i> Add Investment</button>
+                    </div>
+                    <div class="invest-charts-grid">
+                        <div class="chart-container">
+                            <canvas id="invest-type-chart"></canvas>
+                        </div>
+                        <div class="table-container">
+                            <table id="investments-table">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Type</th>
+                                        <th>Invested</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="investments-body"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modals -->
+    <div id="transaction-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h2 id="modal-title">Add New Transaction</h2>
+            <form id="transaction-form">
+                <input type="hidden" id="edit-id">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="amount">Amount</label>
+                        <input type="number" id="amount" step="0.01" required placeholder="0.00">
+                    </div>
+                    <div class="form-group">
+                        <label for="type">Type</label>
+                        <select id="type" required>
+                            <option value="income">Income</option>
+                            <option value="expense">Expense</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="category">Category</label>
+                    <select id="category" required>
+                        <option value="Salary">Salary</option>
+                        <option value="Food">Food</option>
+                        <option value="Travel">Travel</option>
+                        <option value="Bills">Bills</option>
+                        <option value="Entertainment">Entertainment</option>
+                        <option value="Shopping">Shopping</option>
+                        <option value="Health">Health</option>
+                        <option value="Investment">Investment</option>
+                        <option value="Others">Others</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="date">Date</label>
+                    <input type="date" id="date" required>
+                </div>
+                <div class="form-group">
+                    <label for="notes">Notes</label>
+                    <textarea id="notes" placeholder="Short description..."></textarea>
+                </div>
+                <div class="form-group checkbox-group">
+                    <label><input type="checkbox" id="is-investment"> Mark as Investment</label>
+                </div>
+                <button type="submit" class="btn-primary w-full" id="save-transaction">Save Transaction</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="budget-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h2>Set Budget Limits</h2>
+            <form id="budget-form">
+                <div id="budget-inputs-container">
+                    <!-- Dynamic budget inputs per category -->
+                </div>
+                <button type="submit" class="btn-primary w-full">Save Budgets</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Investment Modal -->
+    <div id="invest-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h2>Add Investment</h2>
+            <form id="invest-form">
+                <input type="hidden" id="invest-id">
+                <div class="form-group">
+                    <label>Investment Name</label>
+                    <input type="text" id="invest-name" required placeholder="e.g. Mutual Fund A">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Type</label>
+                        <select id="invest-type">
+                            <option value="Stock">Stock</option>
+                            <option value="Mutual Fund">Mutual Fund</option>
+                            <option value="Fixed Deposit">Fixed Deposit</option>
+                            <option value="Crypto">Crypto</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Amount Invested</label>
+                        <input type="number" id="invest-amount" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Date</label>
+                        <input type="date" id="invest-date" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Expected Annual %</label>
+                        <input type="number" id="invest-rate" value="10">
+                    </div>
+                </div>
+                <button type="submit" class="btn-primary w-full">Save Investment</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
