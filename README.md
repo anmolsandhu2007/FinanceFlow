@@ -63,6 +63,4 @@
 }
 ```
 
-## 📜 Credits & License
-This project is open-source.
-*Built with Gemini 3 Flash (Preview)*
+
